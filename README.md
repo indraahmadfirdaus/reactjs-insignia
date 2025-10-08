@@ -1,66 +1,66 @@
 # Task Scheduler Frontend (React + TypeScript + Vite)
 
-Frontend untuk aplikasi Task Scheduler. Menyediakan halaman daftar task, pembuatan dan pengeditan task, tampilan log eksekusi dengan filter dan pagination, serta statistik ringkas di header.
+A small frontend for a Task Scheduler app. It provides task listing, creation and editing, execution logs with filters and pagination, and a compact header with live statistics.
 
-## Fitur
+## Features
 
-- Dashboard header dengan statistik: `Total`, `Active`, `Inactive`, `Failed`.
-- Daftar task dengan status, jadwal, dan menu `Actions` (Edit, Logs, Delete, Activate/Deactivate).
-- Halaman logs per task: filter `Status`, `Limit`, pagination, header sticky, konten tabel scrollable.
-- Edit dan tambah task dengan validasi cron dan input yang rapi.
-- Refetch statistik otomatis setelah aksi pada task (create/update/delete/toggle).
+- Header badges with statistics: `Total`, `Active`, `Inactive`, `Failed`.
+- Task list with status, schedule, and `Actions` menu (Edit, Logs, Delete, Activate/Deactivate).
+- Per-task logs page: `Status` and `Limit` filters, pagination, sticky table header, and scrollable table content.
+- Create and edit tasks with cron validation and clean inputs.
+- Automatically refetches statistics after task actions (create/update/delete/toggle).
 
 ## Tech Stack
 
 - `React` + `TypeScript` + `Vite`.
-- `Tailwind CSS` untuk styling komponen (`Button`, `Badge`, `Card`, `Dropdown`).
+- `Tailwind CSS` for styling (buttons, badges, cards, dropdowns).
 
-## Struktur Utama
+## Key Structure
 
-- `src/components/shared/Layout.tsx` — kerangka UI, header, dan listener `refresh-stats`.
-- `src/pages/TaskList.tsx` — daftar task + dropdown Actions.
-- `src/pages/TaskForm.tsx` — form tambah/edit task.
-- `src/pages/TaskLogs.tsx` — logs per task (filter, pagination, scrollable table).
-- `src/lib/api.ts` — klien API (tasks, logs, dashboard stats).
-- `src/types/index.ts` — tipe data Task, TaskLog, dan respons paginasi.
+- `src/components/shared/Layout.tsx` — UI frame, header, and global `refresh-stats` listener.
+- `src/pages/TaskList.tsx` — task list + Actions dropdown.
+- `src/pages/TaskForm.tsx` — create/edit task form.
+- `src/pages/TaskLogs.tsx` — task logs (filters, pagination, scrollable table).
+- `src/lib/api.ts` — API client (tasks, logs, dashboard stats).
+- `src/types/index.ts` — types for Task, TaskLog, and paginated responses.
 
-## Rute Aplikasi
+## Routes
 
 - `/` — TaskList
-- `/tasks/new` — Tambah Task
+- `/tasks/new` — Create Task
 - `/tasks/edit/:id` — Edit Task
-- `/tasks/:id/logs` — Logs Task
+- `/tasks/:id/logs` — Task Logs
 
-## Persiapan & Menjalankan
+## Setup & Run
 
-1. Instalasi dependencies:
+1. Install dependencies:
    - `npm install`
-2. Konfigurasi environment (`.env`):
-   - `VITE_API_BASE_URL` — base URL untuk backend Task Scheduler.
-3. Jalankan mode pengembangan:
+2. Environment config (`.env`):
+   - `VITE_API_BASE_URL` — base URL of the Task Scheduler backend.
+3. Start development server:
    - `npm run dev`
-   - Buka `http://localhost:5173/` (otomatis pindah port jika 5173 sudah dipakai).
-4. Build produksi:
+   - Open `http://localhost:5173/` (Vite will auto-select another port if needed).
+4. Production build:
    - `npm run build`
-   - Artefak tersedia di folder `dist/`.
+   - Artifacts will be in the `dist/` folder.
 
-## Kontrak API yang Digunakan
+## API Contracts
 
-- `GET /tasks` — daftar task
-- `GET /tasks/:id` — detail task
-- `POST /tasks` — membuat task
-- `PUT /tasks/:id` — memperbarui task
-- `DELETE /tasks/:id` — menghapus task
-- `POST /tasks/:id/toggle` — mengaktifkan/menonaktifkan task
-- `GET /tasks/:id/logs?page&limit&status` — logs eksekusi per task (paginasi + filter status)
-- `GET /dashboard/stats` — statistik ringkas (total/active/inactive/failed)
+- `GET /tasks` — list tasks
+- `GET /tasks/:id` — get task detail
+- `POST /tasks` — create task
+- `PUT /tasks/:id` — update task
+- `DELETE /tasks/:id` — delete task
+- `POST /tasks/:id/toggle` — activate/deactivate task
+- `GET /tasks/:id/logs?page&limit&status` — task execution logs (pagination + status filter)
+- `GET /dashboard/stats` — header statistics (total/active/inactive/failed)
 
-## Catatan Pengembangan
+## Development Notes
 
-- Layout mendengarkan event global `refresh-stats` dan akan memanggil ulang `getDashboardStats`. Event ini dikirim dari `TaskList` (delete/toggle) dan `TaskForm` (create/update).
-- Tabel logs dibuat scrollable agar tidak keluar dari frame; header tabel sticky untuk keterbacaan saat scroll.
-- Dropdown Actions memakai komponen reusable `src/components/ui/Dropdown.tsx` dengan z-index dinaikkan agar tidak terpotong.
+- The layout listens for a global `refresh-stats` `CustomEvent` and re-fetches `getDashboardStats`. This event is dispatched from `TaskList` (delete/toggle) and `TaskForm` (create/update).
+- The logs table is scrollable so it doesn’t overflow the frame; the table header is sticky for better readability while scrolling.
+- The header has rounded top corners to match the card’s bottom rounding.
 
-## Lisensi
+## License
 
-Internal proyek. Jangan menambahkan header lisensi kecuali diminta.
+Internal project. Do not add license headers unless requested.
