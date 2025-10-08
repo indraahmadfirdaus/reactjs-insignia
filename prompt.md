@@ -120,4 +120,4 @@ Prompt 4.1: Konfigurasi Routing
 Gunakan komponen Layout sebagai pembungkus untuk semua halaman."
 
 Prompt 4.2: Finalisasi dan Styling
-"Tinjau kembali semua halaman. Pastikan desainnya konsisten, responsif, dan sesuai dengan design-inspiration.png. Tambahkan state loading dan penanganan error di semua tempat yang melakukan pemanggilan API untuk meningkatkan pengalaman pengguna."
+"Tinjau kembali semua halaman. Pastikan desainnya konsisten, responsif, dan sesuai dengan design-inspiration.webp. Tambahkan state loading dan penanganan error di semua tempat yang melakukan pemanggilan API untuk meningkatkan pengalaman pengguna."
