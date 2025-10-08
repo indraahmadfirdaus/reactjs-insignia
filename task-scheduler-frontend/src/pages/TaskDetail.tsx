@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getTaskById, getLogsForTask } from "../lib/api";
 import { Badge } from "../components/ui/Badge";
+import { Card } from "../components/ui/Card";
 import type { Task, TaskLog } from "../types";
 
 const TaskDetail = () => {
@@ -47,18 +48,23 @@ const TaskDetail = () => {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-4">{task.name}</h1>
-      <div className="bg-white shadow-md rounded-lg p-4 mb-4">
-        <p><strong>ID:</strong> {task.id}</p>
-        <p><strong>Schedule:</strong> {task.schedule}</p>
-        <p><strong>Webhook URL:</strong> {task.webhookUrl}</p>
-        <p><strong>Max Retry:</strong> {task.maxRetry}</p>
-        <p><strong>Status:</strong> <Badge variant={task.status}>{task.status}</Badge></p>
-        <p><strong>Payload:</strong></p>
-        <pre className="bg-gray-100 p-2 rounded">{JSON.stringify(task.payload, null, 2)}</pre>
-      </div>
+      <Card className="mb-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p><strong>ID:</strong> {task.id}</p>
+            <p><strong>Schedule:</strong> {task.schedule}</p>
+            <p><strong>Channel ID:</strong> {(task as any).channelId}</p>
+          </div>
+          <div>
+            <p><strong>Max Retry:</strong> {task.maxRetry}</p>
+            <p><strong>Status:</strong> <Badge variant={task.status}>{task.status}</Badge></p>
+          </div>
+        </div>
+        {/* Payload removed per API revision */}
+      </Card>
 
       <h2 className="text-2xl font-bold mb-4">Execution Logs</h2>
-      <div className="bg-white shadow-md rounded-lg">
+      <Card>
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -79,7 +85,7 @@ const TaskDetail = () => {
             ))}
           </tbody>
         </table>
-      </div>
+      </Card>
     </div>
   );
 };

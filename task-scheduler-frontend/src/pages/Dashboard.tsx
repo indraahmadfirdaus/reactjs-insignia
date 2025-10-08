@@ -1,26 +1,33 @@
 import { useEffect, useState } from "react";
-import { getDashboardStats } from "../lib/api";
-import { Card } from "../components/ui/Card";
-import type { DashboardStats } from "../types";
+import { getTasks } from "../lib/api";
+import { Badge } from "../components/ui/Badge";
+import type { Task } from "../types";
 
 const Dashboard = () => {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchTasks = async () => {
       try {
-        const data = await getDashboardStats();
-        setStats(data);
+        const data = await getTasks();
+        const normalized = Array.isArray(data)
+          ? data
+          : Array.isArray((data as any)?.tasks)
+          ? (data as any).tasks
+          : Array.isArray((data as any)?.data)
+          ? (data as any).data
+          : [];
+        setTasks(normalized);
       } catch (err) {
-        setError("Failed to fetch dashboard stats.");
+        setError("Failed to fetch tasks.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchStats();
+    fetchTasks();
   }, []);
 
   if (loading) {
@@ -33,20 +40,22 @@ const Dashboard = () => {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-4">Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <h2 className="text-lg font-semibold">Total Tasks</h2>
-          <p className="text-3xl font-bold">{stats?.totalTasks}</p>
-        </Card>
-        <Card>
-          <h2 className="text-lg font-semibold">Active Tasks</h2>
-          <p className="text-3xl font-bold">{stats?.activeTasks}</p>
-        </Card>
-        <Card>
-          <h2 className="text-lg font-semibold">Failed Tasks</h2>
-          <p className="text-3xl font-bold">{stats?.failedTasks}</p>
-        </Card>
+      <h2 className="text-lg font-semibold mb-3">Today’s Tasks</h2>
+      <div>
+        
+          {tasks.length === 0 ? (
+            <div className="min-h-[200px] flex items-center justify-center text-sm text-gray-600">Belum ada task.</div>
+          ) : (
+            <ul className="space-y-3">
+              {tasks.map((t) => (
+                <li key={t.id} className="rounded-xl p-4 bg-indigo-100 shadow-sm">
+                  <div className="font-medium text-gray-800">{t.name}</div>
+                  <div className="mt-1 text-xs text-gray-700">Status: <Badge variant={t.status}>{t.status}</Badge></div>
+                </li>
+              ))}
+            </ul>
+          )}
+
       </div>
     </div>
   );

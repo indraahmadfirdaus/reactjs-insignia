@@ -1,73 +1,66 @@
-# React + TypeScript + Vite
+# Task Scheduler Frontend (React + TypeScript + Vite)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend untuk aplikasi Task Scheduler. Menyediakan halaman daftar task, pembuatan dan pengeditan task, tampilan log eksekusi dengan filter dan pagination, serta statistik ringkas di header.
 
-Currently, two official plugins are available:
+## Fitur
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Dashboard header dengan statistik: `Total`, `Active`, `Inactive`, `Failed`.
+- Daftar task dengan status, jadwal, dan menu `Actions` (Edit, Logs, Delete, Activate/Deactivate).
+- Halaman logs per task: filter `Status`, `Limit`, pagination, header sticky, konten tabel scrollable.
+- Edit dan tambah task dengan validasi cron dan input yang rapi.
+- Refetch statistik otomatis setelah aksi pada task (create/update/delete/toggle).
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `React` + `TypeScript` + `Vite`.
+- `Tailwind CSS` untuk styling komponen (`Button`, `Badge`, `Card`, `Dropdown`).
 
-## Expanding the ESLint configuration
+## Struktur Utama
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- `src/components/shared/Layout.tsx` — kerangka UI, header, dan listener `refresh-stats`.
+- `src/pages/TaskList.tsx` — daftar task + dropdown Actions.
+- `src/pages/TaskForm.tsx` — form tambah/edit task.
+- `src/pages/TaskLogs.tsx` — logs per task (filter, pagination, scrollable table).
+- `src/lib/api.ts` — klien API (tasks, logs, dashboard stats).
+- `src/types/index.ts` — tipe data Task, TaskLog, dan respons paginasi.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Rute Aplikasi
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- `/` — TaskList
+- `/tasks/new` — Tambah Task
+- `/tasks/edit/:id` — Edit Task
+- `/tasks/:id/logs` — Logs Task
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Persiapan & Menjalankan
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+1. Instalasi dependencies:
+   - `npm install`
+2. Konfigurasi environment (`.env`):
+   - `VITE_API_BASE_URL` — base URL untuk backend Task Scheduler.
+3. Jalankan mode pengembangan:
+   - `npm run dev`
+   - Buka `http://localhost:5173/` (otomatis pindah port jika 5173 sudah dipakai).
+4. Build produksi:
+   - `npm run build`
+   - Artefak tersedia di folder `dist/`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Kontrak API yang Digunakan
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- `GET /tasks` — daftar task
+- `GET /tasks/:id` — detail task
+- `POST /tasks` — membuat task
+- `PUT /tasks/:id` — memperbarui task
+- `DELETE /tasks/:id` — menghapus task
+- `POST /tasks/:id/toggle` — mengaktifkan/menonaktifkan task
+- `GET /tasks/:id/logs?page&limit&status` — logs eksekusi per task (paginasi + filter status)
+- `GET /dashboard/stats` — statistik ringkas (total/active/inactive/failed)
+
+## Catatan Pengembangan
+
+- Layout mendengarkan event global `refresh-stats` dan akan memanggil ulang `getDashboardStats`. Event ini dikirim dari `TaskList` (delete/toggle) dan `TaskForm` (create/update).
+- Tabel logs dibuat scrollable agar tidak keluar dari frame; header tabel sticky untuk keterbacaan saat scroll.
+- Dropdown Actions memakai komponen reusable `src/components/ui/Dropdown.tsx` dengan z-index dinaikkan agar tidak terpotong.
+
+## Lisensi
+
+Internal proyek. Jangan menambahkan header lisensi kecuali diminta.
