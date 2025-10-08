@@ -2,8 +2,7 @@ export interface Task {
   id: string;
   name: string;
   schedule: string; // format cron
-  webhookUrl: string;
-  payload: Record<string, any>; // JSON
+  channelId: string; // Discord channel ID
   maxRetry: number;
   status: 'ACTIVE' | 'INACTIVE';
   createdAt: string; // ISO Date String
@@ -20,8 +19,23 @@ export interface TaskLog {
   createdAt: string; // ISO Date String
 }
 
+export type LogStatus = 'SUCCESS' | 'FAILED' | 'RETRYING';
+
+export interface PaginatedMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface TaskLogsResponse {
+  data: TaskLog[];
+  meta: PaginatedMeta;
+}
+
 export interface DashboardStats {
-  totalTasks: number;
-  activeTasks: number;
-  failedTasks: number;
+  total: number;
+  active: number;
+  inactive: number;
+  failed: number;
 }

@@ -1,19 +1,45 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { createTask } from "../lib/api";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { createTask, getTaskById, updateTask } from "../lib/api";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/Card";
+import CronInput from "../components/ui/CronInput";
+import { normalizeCron, isValidCron } from "../lib/cron";
+
 import type { Task } from "../types";
 
 const TaskForm = () => {
+  const monthYear = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const isEdit = Boolean(id);
   const [name, setName] = useState("");
-  const [schedule, setSchedule] = useState("");
+  const [schedule, setSchedule] = useState("* * * * *");
+  const [startTime, setStartTime] = useState("16:00");
+  const [endTime, setEndTime] = useState("17:00");
   const [webhookUrl, setWebhookUrl] = useState("");
   const [maxRetry, setMaxRetry] = useState(0);
-  const [payload, setPayload] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // cron description now handled inside CronInput component
+
+  useEffect(() => {
+    const loadForEdit = async () => {
+      if (!isEdit || !id) return;
+      try {
+        const task = await getTaskById(id);
+        setName(task.name ?? "");
+        setSchedule(task.schedule ?? "* * * * *");
+        setWebhookUrl((task as any).webhookUrl ?? (task as any).channelId ?? "");
+        setMaxRetry(task.maxRetry ?? 0);
+      } catch {
+        setError("Failed to load task for edit.");
+      }
+    };
+    loadForEdit();
+  }, [isEdit, id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,69 +50,84 @@ const TaskForm = () => {
       return;
     }
 
-    let parsedPayload;
-    try {
-      parsedPayload = payload ? JSON.parse(payload) : {};
-    } catch (err) {
-      setError("Invalid JSON payload.");
+    // Validate cron strictly and normalize before submit
+    const normalizedCron = normalizeCron(schedule);
+    if (!isValidCron(normalizedCron)) {
+      setError("Cron tidak valid. Gunakan format 5 field (min hour dom month dow).");
       return;
     }
 
+    // payload removed per API revision
+
     setSubmitting(true);
 
-    const taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'status'> = {
+    const taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'> = {
       name,
-      schedule,
-      webhookUrl,
+      schedule: normalizedCron,
+      channelId: webhookUrl,
       maxRetry,
-      payload: parsedPayload,
+      status: 'ACTIVE',
     };
 
     try {
-      await createTask(taskData);
-      navigate("/tasks");
+      if (isEdit && id) {
+        await updateTask(id, taskData);
+      } else {
+        await createTask(taskData);
+      }
+      // trigger dashboard stats refresh
+      window.dispatchEvent(new Event("refresh-stats"));
+      navigate("/");
     } catch (err) {
-      setError("Failed to create task.");
+      setError(isEdit ? "Failed to update task." : "Failed to create task.");
     } finally {
       setSubmitting(false);
     }
   };
 
+  // Payload support removed in API revision
+
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-4">Create Task</h1>
-      {error && <div className="text-red-500 mb-4">{error}</div>}
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
-          <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+      <div className="mb-3"><Button variant="secondary" onClick={() => navigate(-1)} className="rounded-full">Back</Button></div>
+      <h2 className="text-lg font-semibold mb-2">{isEdit ? "Edit Task" : "Add Task"}</h2>
+      <div className="mb-3 bg-indigo-700 rounded-xl text-white p-3">
+        <div className="text-xs opacity-80">{monthYear}</div>
+      </div>
+      <Card>
+        {error && <div className="text-red-500 mb-4">{error}</div>}
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Task Name</label>
+            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required className="rounded-full bg-gray-50" />
+          </div>
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label htmlFor="startTime" className="block text-sm font-medium text-gray-700">Start Time</label>
+          <Input id="startTime" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="rounded-full bg-gray-50" />
         </div>
-        <div className="mb-4">
-          <label htmlFor="schedule" className="block text-sm font-medium text-gray-700">Schedule (Cron)</label>
-          <Input id="schedule" value={schedule} onChange={(e) => setSchedule(e.target.value)} required />
+        <div>
+          <label htmlFor="endTime" className="block text-sm font-medium text-gray-700">End Time</label>
+          <Input id="endTime" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="rounded-full bg-gray-50" />
         </div>
-        <div className="mb-4">
-          <label htmlFor="webhookUrl" className="block text-sm font-medium text-gray-700">Webhook URL</label>
-          <Input id="webhookUrl" type="url" value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)} required />
-        </div>
-        <div className="mb-4">
-          <label htmlFor="maxRetry" className="block text-sm font-medium text-gray-700">Max Retry</label>
-          <Input id="maxRetry" type="number" value={maxRetry} onChange={(e) => setMaxRetry(Number(e.target.value))} />
-        </div>
-        <div className="mb-4">
-          <label htmlFor="payload" className="block text-sm font-medium text-gray-700">Payload (JSON)</label>
-          <textarea
-            id="payload"
-            value={payload}
-            onChange={(e) => setPayload(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows={5}
-          />
-        </div>
-        <Button type="submit" variant="primary" disabled={submitting}>
-          {submitting ? "Creating..." : "Create Task"}
-        </Button>
-      </form>
+      </div>
+      <div className="mb-4">
+        <label htmlFor="schedule" className="block text-sm font-medium text-gray-700">Schedule (Cron)</label>
+        <CronInput id="schedule" value={schedule} onChange={setSchedule} />
+      </div>
+      <div className="mb-4">
+        <label htmlFor="webhookUrl" className="block text-sm font-medium text-gray-700">Webhook URL</label>
+        <Input id="webhookUrl" type="url" value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)} required className="rounded-full bg-gray-50" />
+      </div>
+      <div className="mb-4">
+        <label htmlFor="maxRetry" className="block text-sm font-medium text-gray-700">Max Retry</label>
+        <Input id="maxRetry" type="number" value={maxRetry} onChange={(e) => setMaxRetry(Number(e.target.value))} className="rounded-full bg-gray-50" />
+      </div>
+          <Button type="submit" variant="primary" disabled={submitting} className="w-full rounded-full">
+            {submitting ? (isEdit ? "Saving..." : "Creating...") : (isEdit ? "Save" : "Add")}
+          </Button>
+        </form>
+      </Card>
     </div>
   );
 };
